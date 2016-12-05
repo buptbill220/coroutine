@@ -154,13 +154,13 @@ coroutine_resume(struct schedule * S, int id) {
 static void
 _save_stack(struct coroutine *C, char *top) {
 	char dummy = 0;
-	assert(top - &dummy <= STACK_SIZE);
 	if (C->cap < top - &dummy) {
 		free(C->stack);
 		C->cap = top-&dummy;
 		C->stack = malloc(C->cap);
 	}
 	C->size = top - &dummy;
+    printf("cap: %d, size: %d\n", C->cap, C->size);
 	memcpy(C->stack, &dummy, C->size);
 }
 
@@ -169,11 +169,14 @@ coroutine_yield(struct schedule * S) {
 	int id = S->running;
 	assert(id >= 0);
 	struct coroutine * C = S->co[id];
+    *((int*)(&C) + 2) = 10;
 	assert((char *)&C > S->stack);
 	_save_stack(C,S->stack + STACK_SIZE);
 	C->status = COROUTINE_SUSPEND;
 	S->running = -1;
+    int x = 4;
 	swapcontext(&C->ctx , &S->main);
+    printf("id:%d, yield, %d\n", id, x + id);
 }
 
 int 
